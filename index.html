@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Event Photo Finder — 27th</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0ede8;
+    --text-muted: #888;
+    --text-dim: #555;
+    --accent: #e8c97a;
+    --accent-dim: rgba(232,201,122,0.12);
+    --accent-dim2: rgba(232,201,122,0.2);
+    --red: #e05a5a;
+    --green: #5acd9a;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ─── Header ─── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    background: rgba(13,13,13,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  .header-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ─── Main layout ─── */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    margin-bottom: 3rem;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 480px;
+  }
+
+  /* ─── Scan section ─── */
+  .scan-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .scan-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn-scan {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #0d0d0d;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-scan:hover { opacity: 0.88; }
+  .btn-scan:active { transform: scale(0.97); }
+  .btn-scan:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  .scan-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1rem;
+    font-family: 'Space Mono', monospace;
+    display: none;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    margin-top: 1rem;
+    display: none;
+  }
+  .progress-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ─── Search ─── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  .search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 16px;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding: 14px 16px 14px 46px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 16px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .search-input::placeholder { color: var(--text-dim); }
+  .search-input:focus { border-color: var(--accent); }
+  .search-count {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ─── Grid ─── */
+  .section-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .photo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .photo-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+  }
+  .photo-thumb-wrap {
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--surface2);
+    position: relative;
+  }
+  .photo-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s;
+  }
+  .photo-card:hover .photo-thumb { transform: scale(1.04); }
+  .photo-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 28px;
+  }
+  .photo-info {
+    padding: 10px 12px;
+  }
+  .photo-filename {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+  .photo-names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .name-pill {
+    font-size: 12px;
+    padding: 2px 8px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 99px;
+    font-weight: 500;
+    border: 1px solid var(--accent-dim2);
+  }
+  .name-pill-none {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ─── Empty / loading states ─── */
+  .empty-state {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+  }
+  .empty-state .big-icon { font-size: 40px; margin-bottom: 1rem; opacity: 0.3; }
+  .empty-state p { font-size: 14px; }
+
+  /* ─── Lightbox ─── */
+  #lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img {
+    max-width: 90vw;
+    max-height: 80vh;
+    border-radius: var(--radius);
+    object-fit: contain;
+  }
+  .lightbox-meta {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .lightbox-names { color: var(--accent); font-weight: 500; font-size: 15px; margin-bottom: 4px; }
+  .lightbox-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .btn-lb {
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+  .btn-lb:hover { background: var(--surface2); }
+  .lightbox-close {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+    background: none;
+    border: none;
+    transition: color 0.15s;
+  }
+  .lightbox-close:hover { color: var(--text); }
+
+  /* ─── Toast ─── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 99px;
+    font-family: 'Space Mono', monospace;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+    z-index: 9999;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    main { padding: 2rem 1rem 5rem; }
+    header { padding: 0 1rem; }
+    .photos-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">EVENT / 27TH</div>
+  <div class="header-status" id="headerStatus">—</div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>ค้นหา<span>รูปงาน</span><br />จากชื่อได้เลย</h1>
+    <p>พิมชื่อผู้เข้าร่วมเพื่อค้นหารูปถ่ายจากงาน หากยังไม่มี index ให้กด Scan ก่อนครั้งแรก</p>
+  </div>
+
+  <div class="scan-section">
+    <div class="scan-row">
+      <button class="btn-scan" id="scanBtn" onclick="startScan()">
+        <span>&#9654;</span> Scan รูปจาก Drive
+      </button>
+      <button class="btn-ghost" id="clearBtn" onclick="clearIndex()" style="display:none">
+        ล้าง index
+      </button>
+    </div>
+    <div class="scan-meta" id="scanMeta"></div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progressLabel"></div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input
+      class="search-input"
+      type="text"
+      id="searchInput"
+      placeholder="พิมชื่อ เช่น สมชาย หรือ Somchai..."
+      oninput="onSearch()"
+      autocomplete="off"
+    />
+    <span class="search-count" id="searchCount"></span>
+  </div>
+
+  <div class="section-label" id="sectionLabel" style="display:none"></div>
+  <div class="photos-grid" id="photosGrid">
+    <div class="empty-state">
+      <div class="big-icon">◎</div>
+      <p>Scan รูปก่อนเพื่อสร้าง index ชื่อ<br />จากนั้นค้นหาได้ทันที</p>
+    </div>
+  </div>
+</main>
+
+<div id="lightbox" onclick="handleLbClick(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lbImg" src="" alt="" />
+  <div class="lightbox-meta">
+    <div class="lightbox-names" id="lbNames"></div>
+    <div id="lbFile"></div>
+    <div class="lightbox-actions">
+      <a class="btn-lb" id="lbOpen" href="#" target="_blank" rel="noopener">↗ เปิดใน Drive</a>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const FOLDER_ID = '1J_byfwLUwgDxMEfwA9n9omSxU1wtUg2D';
+const MODEL = 'claude-sonnet-4-20250514';
+const STORAGE_KEY = 'photoIndex_27th_v2';
+
+let photoIndex = [];
+let scanning = false;
+let currentResults = [];
+
+/* ─── Storage ─── */
+function saveIndex() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(photoIndex)); } catch(e) {}
+}
+function loadIndex() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      photoIndex = JSON.parse(raw);
+      updateHeaderStatus();
+      showScanMeta();
+      document.getElementById('clearBtn').style.display = 'inline-flex';
+    }
+  } catch(e) {}
+}
+function clearIndex() {
+  if (!confirm('ล้าง index ทั้งหมดใช่ไหม?')) return;
+  photoIndex = [];
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('scanMeta').style.display = 'none';
+  document.getElementById('clearBtn').style.display = 'none';
+  document.getElementById('sectionLabel').style.display = 'none';
+  document.getElementById('searchCount').textContent = '';
+  document.getElementById('photosGrid').innerHTML = `
+    <div class="empty-state">
+      <div class="big-icon">◎</div>
+      <p>Scan รูปก่อนเพื่อสร้าง index ชื่อ<br />จากนั้นค้นหาได้ทันที</p>
+    </div>`;
+  updateHeaderStatus();
+  showToast('ล้าง index แล้ว');
+}
+
+/* ─── API: list files ─── */
+async function listDriveFiles() {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 1000,
+      system: 'List image files from Google Drive. Return ONLY a valid JSON array of objects: [{id, name, webViewLink}]. No markdown, no explanation, no extra text.',
+      messages: [{ role: 'user', content: `List all image files in folder ID: ${FOLDER_ID}` }],
+      mcp_servers: [{ type: 'url', url: 'https://drive.mcp.claude.com/mcp', name: 'google-drive' }]
+    })
+  });
+  const data = await resp.json();
+  const allText = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  const m = allText.match(/\[[\s\S]*\]/);
+  if (m) return JSON.parse(m[0]);
+  for (const b of data.content.filter(b => b.type === 'mcp_tool_result')) {
+    try {
+      const p = JSON.parse(b.content?.[0]?.text || '');
+      if (Array.isArray(p)) return p;
+      if (p.files) return p.files;
+    } catch(e) {}
+  }
+  return [];
+}
+
+/* ─── API: read names ─── */
+async function readNames(fileId, fileName) {
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 200,
+        system: 'You read name tags (lanyard badges) in event photos. Return ONLY a JSON array of name strings. Names can be Thai or English. If no name tag is visible or readable, return []. No markdown, no explanation at all.',
+        messages: [{ role: 'user', content: `Read name tags from Google Drive file ID: ${fileId} (file: ${fileName})` }],
+        mcp_servers: [{ type: 'url', url: 'https://drive.mcp.claude.com/mcp', name: 'google-drive' }]
+      })
+    });
+    const data = await resp.json();
+    const allText = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const m = allText.match(/\[[\s\S]*?\]/);
+    if (m) return JSON.parse(m[0]);
+  } catch(e) {}
+  return [];
+}
+
+/* ─── Scan ─── */
+async function startScan() {
+  if (scanning) return;
+  scanning = true;
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>↻</span> กำลัง Scan...';
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('progressLabel').textContent = 'กำลังดึงรายชื่อไฟล์จาก Google Drive...';
+  document.getElementById('photosGrid').innerHTML = '';
+  document.getElementById('sectionLabel').style.display = 'none';
+
+  let files = [];
+  try {
+    files = await listDriveFiles();
+  } catch(e) {
+    showToast('ไม่สามารถเชื่อมต่อ Google Drive ได้');
+    resetScanBtn(); return;
+  }
+  if (files.length === 0) {
+    showToast('ไม่พบไฟล์รูปใน folder');
+    resetScanBtn(); return;
+  }
+
+  photoIndex = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    const pct = Math.round(((i + 1) / files.length) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = `(${i + 1}/${files.length}) อ่านป้ายชื่อ: ${f.name}`;
+    const names = await readNames(f.id, f.name);
+    photoIndex.push({
+      id: f.id,
+      name: f.name,
+      names,
+      webViewLink: f.webViewLink || `https://drive.google.com/file/d/${f.id}/view`
+    });
+  }
+
+  saveIndex();
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('clearBtn').style.display = 'inline-flex';
+  showScanMeta();
+  updateHeaderStatus();
+  resetScanBtn();
+  showAllPhotos();
+  showToast(`Scan เสร็จ! ${files.length} รูป`);
+}
+
+function resetScanBtn() {
+  scanning = false;
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = false;
+  btn.innerHTML = '<span>▶</span> Scan รูปจาก Drive';
+}
+
+function showScanMeta() {
+  const el = document.getElementById('scanMeta');
+  if (photoIndex.length === 0) { el.style.display = 'none'; return; }
+  const named = photoIndex.filter(p => p.names?.length > 0).length;
+  el.style.display = 'block';
+  el.textContent = `index: ${photoIndex.length} รูป · อ่านชื่อได้ ${named} รูป`;
+}
+
+function updateHeaderStatus() {
+  const el = document.getElementById('headerStatus');
+  el.textContent = photoIndex.length > 0 ? `${photoIndex.length} photos indexed` : '—';
+}
+
+/* ─── Search ─── */
+function onSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) { showAllPhotos(); return; }
+  const lower = q.toLowerCase();
+  const results = photoIndex.filter(p =>
+    p.names?.some(n => n.toLowerCase().includes(lower))
+  );
+  currentResults = results;
+  renderPhotos(results, `ผลลัพธ์ "${q}"`, results.length);
+}
+
+function showAllPhotos() {
+  if (photoIndex.length === 0) return;
+  currentResults = photoIndex;
+  renderPhotos(photoIndex, 'รูปทั้งหมด', photoIndex.length);
+}
+
+function renderPhotos(list, label, count) {
+  const grid = document.getElementById('photosGrid');
+  const lbl = document.getElementById('sectionLabel');
+  const cnt = document.getElementById('searchCount');
+  grid.innerHTML = '';
+  lbl.textContent = label;
+  lbl.style.display = 'block';
+  cnt.textContent = count > 0 ? `${count} รูป` : '';
+
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="big-icon">⊘</div><p>ไม่พบรูปที่ตรงกับชื่อนี้</p></div>`;
+    return;
+  }
+  list.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+    card.onclick = () => openLightbox(p);
+    const thumbSrc = `https://drive.google.com/thumbnail?id=${p.id}&sz=w400`;
+    const pillsHtml = p.names?.length
+      ? p.names.map(n => `<span class="name-pill">${escHtml(n)}</span>`).join('')
+      : `<span class="name-pill-none">ไม่มีป้ายชื่อ</span>`;
+    card.innerHTML = `
+      <div class="photo-thumb-wrap">
+        <img class="photo-thumb" src="${thumbSrc}" alt="${escHtml(p.name)}"
+          onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\\'photo-thumb-placeholder\\'>◎</div>'" />
+      </div>
+      <div class="photo-info">
+        <div class="photo-filename">${escHtml(p.name)}</div>
+        <div class="photo-names">${pillsHtml}</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── Lightbox ─── */
+function openLightbox(p) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lbImg').src = `https://drive.google.com/thumbnail?id=${p.id}&sz=w1200`;
+  document.getElementById('lbNames').textContent = p.names?.length ? p.names.join(' · ') : 'ไม่มีป้ายชื่อ';
+  document.getElementById('lbFile').textContent = p.name;
+  document.getElementById('lbOpen').href = p.webViewLink;
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lbImg').src = '';
+  document.body.style.overflow = '';
+}
+function handleLbClick(e) {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+/* ─── Toast ─── */
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ─── Init ─── */
+loadIndex();
+if (photoIndex.length > 0) showAllPhotos();
+</script>
+</body>
+</html>
